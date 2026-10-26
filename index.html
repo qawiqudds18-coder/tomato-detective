@@ -185,6 +185,17 @@ h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
 }
 .float.good{color:var(--good)}
 .float.bad{color:var(--bad)}
+.float.combo{color:#D9531E;font-size:1.8rem}
+.float.gold{color:#B87A00;font-size:1.6rem;white-space:nowrap}
+.combo{background:var(--sun);color:var(--ink);border-radius:999px;padding:2px 12px;font-family:var(--display);font-weight:800;font-size:.95rem;animation:popIn .25s ease}
+.combo.hot{background:var(--tomato);color:#fff;box-shadow:0 0 0 3px var(--sun-soft)}
+.tom.ripening svg{animation:ripen .7s ease}
+.golden{position:absolute;z-index:4;width:clamp(56px,14vw,84px);aspect-ratio:1/1;border:none;padding:0;background:none;cursor:pointer;
+  filter:drop-shadow(0 0 10px rgba(248,201,58,.9));animation:goldIn .35s cubic-bezier(.3,1.4,.6,1), goldPulse .8s ease-in-out .35s infinite alternate;touch-action:manipulation}
+.golden svg{width:100%;height:100%;overflow:visible}
+@keyframes ripen{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(-4deg)}100%{transform:scale(1)}}
+@keyframes goldIn{0%{transform:scale(0) rotate(-30deg)}100%{transform:scale(1)}}
+@keyframes goldPulse{0%{transform:scale(1)}100%{transform:scale(1.12)}}
 .game-actions{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
 
 /* Overlay between rounds */
@@ -319,8 +330,9 @@ h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
         <ul class="legend" id="legend"></ul>
         <ol class="rules">
           <li>Read the mission. Each correct pick is <b>+10</b>, each wrong pick <b>−5</b>.</li>
-          <li>Clear the round to earn <b>+2 per second</b> left.</li>
-          <li>5 rounds, each with a new challenge: colour stages, shade and sunlight, leaves in the way, and a surprise rule change.</li>
+          <li>Build a streak: <b>3 in a row = x2</b> points, <b>6 in a row = x3</b>. One mistake breaks it.</li>
+          <li>Tap the rare <b>golden tomato</b> for +25 points and +3 seconds.</li>
+          <li>From round 3, tomatoes ripen and even spoil while you play. Fill the basket fast for <b>+2 per second</b> left.</li>
         </ol>
       </div>
 
@@ -343,7 +355,8 @@ h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
       <div class="timebar" id="timebar" aria-hidden="true"><i id="timefill"></i></div>
       <div class="mission">
         <p id="missionText">Find the <strong>ripe red</strong> tomatoes.</p>
-        <div class="basket" aria-label="Ripe tomatoes harvested this round">
+        <div class="basket" aria-label="Tomatoes harvested this round">
+          <span class="combo" id="comboBadge" hidden>Combo x2</span>
           <span>Basket</span><span class="pips" id="pips"></span>
         </div>
       </div>
@@ -460,14 +473,15 @@ const STORE_KEY  = "smartHarvest.tomatoDetective.v1";
 /* =========================================================
    LOGIC-START  (pure functions — tested separately)
    ========================================================= */
-const POINTS = { correct: 10, wrong: 5, bonusPerSecond: 2 };
+const POINTS = { correct: 10, wrong: 5, bonusPerSecond: 2, golden: 25, goldenSeconds: 3 };
 
 const TYPES = {
   ripe:    { label: "Ripe red",    short: "Red",     note: "Ready. Pick it!",       fill: "#D7263D", shade: "#9E1A2C", ripe: true },
   green:   { label: "Green",       short: "Green",   note: "Unripe. Leave it.",     fill: "#8CC63F", shade: "#5D9628", ripe: false },
   turning: { label: "Orange",      short: "Orange",  note: "Turning. Not yet.",     fill: "#F39237", shade: "#C2661A", ripe: false },
   pink:    { label: "Pink",        short: "Pink",    note: "Nearly ripe. Not yet.", fill: "#F4846F", shade: "#D35A46", ripe: false },
-  spoiled: { label: "Brown spots", short: "Spoiled", note: "Spoiled. Skip it.",     fill: "#9A6A45", shade: "#62402A", ripe: false, spots: true }
+  spoiled: { label: "Brown spots", short: "Spoiled", note: "Spoiled. Skip it.",     fill: "#9A6A45", shade: "#62402A", ripe: false, spots: true },
+  golden:  { label: "Golden",      short: "Bonus",   note: "Rare bonus!",           fill: "#F8C93A", shade: "#D98E12", ripe: false }
 };
 
 /* Each round adds one new idea a smart harvester must reason about.
@@ -483,15 +497,18 @@ const ROUNDS = [
     tip: "Only fully red counts. Orange is not ready, brown spots are spoiled.",
     newHTML: () => tomatoSVG("turning") + tomatoSVG("spoiled") + `<span><b>New: Orange and spoiled.</b> Neither one is a good pick.</span>` },
   { name: "Shade and sunlight", total: 16, target: "ripe", count: 6, decoys: ["green", "turning", "spoiled"], time: 18, cols: 4, light: true,
-    intro: "Farm light is never even. In shade, a red tomato looks darker. In bright sun, it looks paler. Its colour type (hue) stays the same, so judge the colour, not the brightness.",
+    ripen: { every: 2600, chain: ["green", "turning", "ripe"] },
+    intro: "Farm light is never even. In shade, a red tomato looks darker. In bright sun, it looks paler. Judge the colour, not the brightness. And watch out: from now on, tomatoes keep ripening while you play!",
     tip: "Dark red in shade is still ripe. Brown spots mean spoiled, even in the sun.",
     newHTML: () => `<span class="lightdemo shade">${tomatoSVG("ripe")}</span><span class="lightdemo glare">${tomatoSVG("ripe")}</span><span><b>Both are ripe.</b> One is in shade, one is in bright sun.</span>` },
   { name: "Hidden by leaves", total: 16, target: "ripe", count: 6, decoys: ["green", "turning", "pink", "spoiled"], time: 16, cols: 4, leaves: true,
-    intro: "Leaves now cover part of some tomatoes, just like on a real plant. Look at the part you can still see. Pink tomatoes are nearly ripe, but not yet.",
-    tip: "Look past the leaves. Pink is nearly ripe, not ripe.",
+    ripen: { every: 2200, chain: ["green", "turning", "pink", "ripe", "spoiled"] },
+    intro: "Leaves now cover part of some tomatoes. Look at the part you can still see. Pink is nearly ripe, but not yet. Be quick: ripe tomatoes left too long will spoil!",
+    tip: "Look past the leaves. Pink is not ripe yet. Pick red before it spoils.",
     newHTML: () => tomatoSVG("pink") + `<span><b>New: Pink.</b> Nearly ripe. Not ready to pick yet.</span>` },
-  { name: "Far market order", total: 16, target: "pink", count: 5, decoys: ["ripe", "ripe", "turning", "green", "spoiled"], time: 15, cols: 4, leaves: true,
-    intro: "Rule change! This box is going to a market far away. Red tomatoes would be too soft when they arrive, so farmers pick them early. Pick only the PINK tomatoes this time.",
+  { name: "Far market order", total: 16, target: "pink", count: 6, decoys: ["ripe", "ripe", "turning", "green", "spoiled"], time: 16, cols: 4, leaves: true,
+    ripen: { every: 1900, chain: ["green", "turning", "pink", "ripe", "spoiled"] },
+    intro: "Rule change! This box is going to a market far away. Red tomatoes would be too soft when they arrive, so farmers pick them early. Pick only the PINK tomatoes. Hurry: pink turns red if you wait!",
     tip: "This round, pink is correct. Red is too ripe for a long trip.",
     newHTML: () => tomatoSVG("pink") + `<span><b>Pick pink, not red.</b> Pink tomatoes keep ripening on the way.</span>` }
 ];
@@ -504,15 +521,39 @@ const RANKS = [
 ];
 
 function newStats() {
-  return { score: 0, correct: 0, wrong: 0, bonus: 0, ripeShown: 0 };
+  return { score: 0, correct: 0, wrong: 0, bonus: 0, ripeShown: 0,
+           pickPts: 0, penalty: 0, golden: 0, streak: 0, bestStreak: 0, lastPts: 0, lastMult: 1 };
 }
 
-/* One tap. Score never drops below zero. */
-function applyTap(stats, isRipe) {
+/* Combo: 3 correct in a row = x2 points, 6 in a row = x3. A wrong pick resets it. */
+function comboMultiplier(streak) {
+  return streak >= 6 ? 3 : streak >= 3 ? 2 : 1;
+}
+
+/* One tap. Score never drops below zero.
+   Invariant: score === pickPts - penalty + bonus + golden */
+function applyTap(stats, good) {
   const s = { ...stats };
-  if (isRipe) { s.correct += 1; s.score += POINTS.correct; }
-  else        { s.wrong += 1;   s.score = Math.max(0, s.score - POINTS.wrong); }
+  if (good) {
+    const m = comboMultiplier(s.streak);
+    const pts = POINTS.correct * m;
+    s.correct += 1; s.streak += 1; s.bestStreak = Math.max(s.bestStreak, s.streak);
+    s.pickPts += pts; s.score += pts; s.lastPts = pts; s.lastMult = m;
+  } else {
+    const lost = Math.min(s.score, POINTS.wrong);
+    s.wrong += 1; s.streak = 0; s.penalty += lost; s.score -= lost; s.lastPts = -lost; s.lastMult = 1;
+  }
   return s;
+}
+
+function addGolden(stats) {
+  return { ...stats, golden: stats.golden + POINTS.golden, score: stats.score + POINTS.golden };
+}
+
+/* Living field: returns the next ripeness stage, or null at the end of the chain. */
+function nextStage(chain, type) {
+  const i = chain.indexOf(type);
+  return i >= 0 && i < chain.length - 1 ? chain[i + 1] : null;
 }
 
 /* Time bonus only when every ripe tomato in the round was harvested. */
@@ -733,9 +774,11 @@ function startGame(name) {
 function prepareRound() {
   const cfg = ROUNDS[G.round];
   const items = buildRound(cfg);
-  G.roundRipeLeft = cfg.count; G.roundHarvested = 0; G.roundWrong = 0;
-  G.stats = { ...G.stats, ripeShown: G.stats.ripeShown + cfg.count };
+  G.roundRipeLeft = cfg.count; G.roundHarvested = 0; G.roundWrong = 0; G.roundBest = 0;
+  G.stats = { ...G.stats, ripeShown: G.stats.ripeShown + cfg.count, streak: 0 };
   G.remaining = cfg.time; G.active = false;
+  G.nextRipen = 0; G.goldenAt = G.round >= 1 ? 0.25 + Math.random() * 0.4 : null; G.goldenDone = false;
+  removeGolden();
 
   const grid = $("grid"); grid.innerHTML = ""; grid.style.setProperty("--cols", cfg.cols);
   items.forEach((k, i) => {
@@ -749,14 +792,14 @@ function prepareRound() {
     }
     const leaf = cfg.leaves && Math.random() < 0.7 ? Math.floor(Math.random() * 360) : null;
     if (leaf !== null) where += ", partly behind leaves";
-    b.setAttribute("aria-label", `Tomato ${i + 1}: ${TYPES[k].label}${where}`);
-    b.innerHTML = tomatoSVG(k, { leaf }) + `<span class="tag">${TYPES[k].short}</span>`;
+    b.dataset.idx = i + 1; b.dataset.where = where; if (leaf !== null) b.dataset.leaf = leaf;
+    drawTile(b, k);
     b.addEventListener("click", onTomato);
     grid.appendChild(b);
   });
   renderPips(); renderHud(); renderTime(cfg.time, cfg.time);
   const tt = TYPES[cfg.target];
-  $("missionText").innerHTML = `${cfg.name}: find all <strong>${cfg.count} ${tt.label.toLowerCase()}</strong> tomatoes.`;
+  $("missionText").innerHTML = `${cfg.name}: fill the basket with <strong>${cfg.count} ${tt.label.toLowerCase()}</strong> tomatoes.`;
   $("roundTip").textContent = "Tip: " + cfg.tip;
 
   openDialog({
@@ -769,8 +812,62 @@ function prepareRound() {
   });
 }
 
+function drawTile(b, k) {
+  b.dataset.type = k;
+  const leaf = b.dataset.leaf != null ? Number(b.dataset.leaf) : null;
+  b.setAttribute("aria-label", `Tomato ${b.dataset.idx}: ${TYPES[k].label}${b.dataset.where || ""}`);
+  b.innerHTML = tomatoSVG(k, { leaf }) + `<span class="tag">${TYPES[k].short}</span>`;
+}
+
+function liveTiles() {
+  return [...document.querySelectorAll("#grid .tom")].filter(b => !b.classList.contains("picked") && !b.classList.contains("wrong"));
+}
+
+/* One tomato on the field moves one ripeness stage. Keeps the round winnable. */
+function ripenStep(cfg) {
+  const chain = cfg.ripen.chain;
+  const tiles = liveTiles();
+  const need = cfg.count - G.roundHarvested;
+  const available = tiles.filter(b => b.dataset.type === cfg.target).length;
+  let pool = tiles.filter(b => nextStage(chain, b.dataset.type));
+  // If too few targets are left, ripen one that is one step away from the target.
+  if (available <= need) {
+    const close = pool.filter(b => nextStage(chain, b.dataset.type) === cfg.target);
+    if (close.length) pool = close;
+  }
+  if (!pool.length) return;
+  const b = pool[Math.floor(Math.random() * pool.length)];
+  drawTile(b, nextStage(chain, b.dataset.type));
+  b.classList.remove("ripening"); void b.offsetWidth; b.classList.add("ripening");
+}
+
+function spawnGolden() {
+  G.goldenDone = true;
+  const g = document.createElement("button");
+  g.type = "button"; g.className = "golden"; g.id = "goldenTom";
+  g.setAttribute("aria-label", `Golden tomato bonus: plus ${POINTS.golden} points and ${POINTS.goldenSeconds} seconds`);
+  g.style.left = (8 + Math.random() * 70) + "%"; g.style.top = (8 + Math.random() * 65) + "%";
+  g.innerHTML = tomatoSVG("golden");
+  g.addEventListener("click", () => {
+    if (!G.active) return;
+    G.stats = addGolden(G.stats);
+    G.endAt += POINTS.goldenSeconds * 1000;
+    floatText(g, `+${POINTS.golden} +${POINTS.goldenSeconds}s`, "gold");
+    Sound.clear(); announce(`Golden tomato! Plus ${POINTS.golden} points and ${POINTS.goldenSeconds} seconds.`);
+    removeGolden(); renderHud();
+  });
+  $("bed").appendChild(g);
+  G.goldenTimer = setTimeout(removeGolden, reduceMotion ? 3200 : 2400);
+}
+function removeGolden() {
+  clearTimeout(G.goldenTimer);
+  const g = document.getElementById("goldenTom"); if (g) g.remove();
+}
+
 function beginRound() {
   closeDialog();
+  const cfgR = ROUNDS[G.round];
+  if (cfgR.ripen) G.nextRipen = performance.now() + cfgR.ripen.every;
   document.querySelectorAll("#grid .tom").forEach(b => { b.disabled = false; });
   G.active = true;
   G.endAt = performance.now() + G.remaining * 1000;
@@ -785,8 +882,11 @@ function beginRound() {
 function tick() {
   if (!G.active) return;
   const cfg = ROUNDS[G.round];
-  G.remaining = Math.max(0, (G.endAt - performance.now()) / 1000);
+  const now = performance.now();
+  G.remaining = Math.max(0, (G.endAt - now) / 1000);
   renderTime(G.remaining, cfg.time);
+  if (cfg.ripen && now >= G.nextRipen) { ripenStep(cfg); G.nextRipen = now + cfg.ripen.every; }
+  if (G.goldenAt != null && !G.goldenDone && (1 - G.remaining / cfg.time) >= G.goldenAt) spawnGolden();
   const whole = Math.ceil(G.remaining);
   if (whole < G.lastTick) { G.lastTick = whole; if (whole <= 3 && whole > 0) Sound.tick(); }
   if (G.remaining <= 0) endRound(false);
@@ -801,13 +901,16 @@ function onTomato(ev) {
   if (good) {
     b.classList.add("picked"); b.setAttribute("aria-label", "Harvested"); b.disabled = true;
     G.roundRipeLeft -= 1; G.roundHarvested += 1;
-    Sound.good(); floatText(b, `+${POINTS.correct}`, "good");
-    announce(`Correct! Plus ${POINTS.correct}. ${G.roundRipeLeft} left.`);
+    G.roundBest = Math.max(G.roundBest, G.stats.streak);
+    const m = G.stats.lastMult;
+    Sound.good(); if (m > 1) Sound.tone(1320, .12, .12, "triangle", .12);
+    floatText(b, `+${G.stats.lastPts}${m > 1 ? " x" + m : ""}`, m > 1 ? "combo" : "good");
+    announce(`Correct! Plus ${G.stats.lastPts}${m > 1 ? ", combo times " + m : ""}. ${G.roundRipeLeft} to go.`);
   } else {
     b.classList.add("wrong"); b.setAttribute("aria-label", `${t.label}: wrong pick`); b.disabled = true;
     G.roundWrong += 1;
     Sound.bad(); floatText(b, `−${POINTS.wrong}`, "bad");
-    announce(`${t.label} is the wrong pick this round. Minus ${POINTS.wrong}.`);
+    announce(`${t.label} is the wrong pick this round. Minus ${POINTS.wrong}. Combo lost.`);
   }
   renderHud(); renderPips();
   if (G.roundRipeLeft === 0) endRound(true);
@@ -822,7 +925,7 @@ function focusNext(b) {
 
 function endRound(cleared) {
   if (!G.active) return;
-  G.active = false; clearInterval(G.timer);
+  G.active = false; clearInterval(G.timer); removeGolden();
   const bonus = roundBonus(cleared, G.remaining);
   G.stats = addBonus(G.stats, bonus);
   document.querySelectorAll("#grid .tom").forEach(b => {
@@ -838,7 +941,8 @@ function endRound(cleared) {
     [String(G.roundWrong), "Wrong"],
     [`+${bonus}`, "Time bonus"]
   ];
-  const lesson = G.roundWrong > 0 ? ` Remember: ${cfg.tip}` : "";
+  const lesson = (G.roundBest >= 3 ? ` Best streak: ${G.roundBest} in a row!` : "") +
+    (G.roundWrong > 0 ? ` Remember: ${cfg.tip}` : "");
   setTimeout(() => openDialog({
     eyebrow: `Round ${G.round + 1} of ${ROUNDS.length} · ${cfg.name}`,
     title: cleared ? "Basket full!" : "Time's up!",
@@ -865,11 +969,10 @@ function finishGame() {
   $("resAcc").textContent = Math.round(acc * 100) + "%";
   $("resHarvest").textContent = `${s.correct}/${s.ripeShown}`;
   $("resWrong").textContent = s.wrong;
-  const basePts = s.correct * POINTS.correct;
   $("resBreakdown").innerHTML =
-    `Correct picks <b>${s.correct} × ${POINTS.correct} = ${basePts}</b> · Wrong picks <b>−${s.wrong * POINTS.wrong}</b> · Time bonus <b>+${s.bonus}</b> · Final <b>${s.score}</b>` +
-    (basePts - s.wrong * POINTS.wrong + s.bonus !== s.score ? " (score never goes below 0)" : "") +
-    `<br>Rank is based on accuracy × ripe tomatoes harvested.`;
+    `Picks with combos <b>+${s.pickPts}</b> · Wrong picks <b>−${s.penalty}</b> · Time bonus <b>+${s.bonus}</b>` +
+    (s.golden ? ` · Golden <b>+${s.golden}</b>` : "") + ` · Final <b>${s.score}</b>` +
+    `<br>Longest streak: <b>${s.bestStreak}</b> in a row. Rank is based on accuracy × baskets filled.`;
   renderScores($("hsResults"), entry.time);
   renderScores($("hsWelcome"));
   show("screenResults");
@@ -878,7 +981,7 @@ function finishGame() {
 }
 
 function quitGame() {
-  G.active = false; clearInterval(G.timer); closeDialog();
+  G.active = false; clearInterval(G.timer); closeDialog(); removeGolden();
   renderScores($("hsWelcome"));
   show("screenWelcome");
   $("nickname").focus({ preventScroll: true });
@@ -890,6 +993,10 @@ function renderHud() {
   $("hudScore").textContent = s.score;
   $("hudRound").textContent = `${G.round + 1}/${ROUNDS.length}`;
   $("hudAcc").textContent = (s.correct + s.wrong) ? Math.round(accuracy(s.correct, s.wrong) * 100) + "%" : "–";
+  const m = comboMultiplier(s.streak), badge = $("comboBadge");
+  badge.hidden = s.streak < 2;
+  badge.textContent = m > 1 ? `Combo x${m}` : `${s.streak} in a row`;
+  badge.classList.toggle("hot", m >= 3);
 }
 function renderTime(left, total) {
   $("hudTime").textContent = Math.ceil(left);
