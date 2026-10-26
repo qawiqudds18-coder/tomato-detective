@@ -1,0 +1,1107 @@
+<title>Tomato Detective</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Smart Harvest — Tomato Detective. A colour-spotting harvest game for Technopreneurship 2026, Brunei Darussalam.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: one app column, three screens (welcome → field → results); the field is a raised garden bed of tomato buttons. */
+:root{
+  --cream:#FFF6E6;
+  --paper:#FFFDF8;
+  --tomato:#D7263D;
+  --tomato-deep:#A61B2E;
+  --leaf:#3B8B3F;
+  --leaf-deep:#2A6A2E;
+  --leaf-soft:#DCEFC9;
+  --sun:#F6B93B;
+  --sun-soft:#FFE9B8;
+  --soil:#EFD9B6;
+  --soil-deep:#D9B98A;
+  --ink:#3A2A22;
+  --muted:#7A6455;
+  --line:#EAD7BC;
+  --good:#2E8B47;
+  --bad:#C62E2E;
+  --display:"Baloo 2","Trebuchet MS","Segoe UI Rounded",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,-apple-system,sans-serif;
+  --r-lg:28px; --r-md:18px; --r-sm:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{
+  margin:0;background:var(--cream);color:var(--ink);
+  font-family:var(--body);font-size:16px;line-height:1.5;
+  background-image:
+    radial-gradient(circle at 8% 12%, #FFE7C2 0 90px, transparent 91px),
+    radial-gradient(circle at 96% 88%, #E6F3D6 0 120px, transparent 121px);
+  background-attachment:fixed;
+  -webkit-tap-highlight-color:transparent;
+}
+button,input{font:inherit;color:inherit}
+.app{
+  max-width:1040px;margin:0 auto;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:16px 40px;
+  display:flex;flex-direction:column;gap:20px;
+}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:1.05rem;color:var(--leaf-deep);letter-spacing:.01em}
+.brand-badge{display:inline-flex;align-items:center;gap:6px;background:var(--leaf);color:#fff;border-radius:999px;padding:4px 12px 3px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+.tool-row{display:flex;gap:8px}
+.icon-btn{
+  min-height:44px;min-width:44px;padding:0 14px;border-radius:999px;border:2px solid var(--line);
+  background:var(--paper);cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.9rem;
+}
+.icon-btn[aria-pressed="true"]{background:var(--leaf-soft);border-color:var(--leaf)}
+.icon-btn svg{width:20px;height:20px}
+
+:focus-visible{outline:4px solid var(--sun);outline-offset:3px;border-radius:12px}
+
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
+.panel{background:var(--paper);border:2px solid var(--line);border-radius:var(--r-lg);padding:24px}
+
+/* ---------- Welcome ---------- */
+.welcome{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start}
+.hero{display:flex;flex-direction:column;gap:14px;padding:8px 4px}
+.hero-art{width:min(230px,55vw);margin:0 auto 0 0;animation:bob 3.2s ease-in-out infinite}
+.eyebrow{font-weight:800;color:var(--tomato);text-transform:uppercase;letter-spacing:.12em;font-size:.82rem}
+.title{font-size:clamp(2.4rem,7vw,4.3rem);font-weight:800;color:var(--tomato-deep)}
+.title span{display:block;color:var(--leaf-deep);font-size:.62em}
+.lede{font-size:1.1rem;color:var(--muted);max-width:34ch;margin:0}
+.form{display:flex;flex-direction:column;gap:16px}
+.field label{display:block;font-weight:800;margin-bottom:6px}
+.field input{
+  width:100%;min-height:56px;border-radius:var(--r-md);border:3px solid var(--line);background:#fff;
+  padding:0 18px;font-size:1.2rem;font-weight:700;
+}
+.field input:focus{border-color:var(--leaf);outline:none;box-shadow:0 0 0 4px var(--leaf-soft)}
+.field input[aria-invalid="true"]{border-color:var(--bad)}
+.hint{font-size:.88rem;color:var(--muted);margin:6px 0 0}
+.error{color:var(--bad);font-weight:700;font-size:.92rem;margin:6px 0 0}
+.btn{
+  min-height:58px;border:none;border-radius:999px;padding:0 28px;cursor:pointer;
+  font-family:var(--display);font-weight:800;font-size:1.3rem;letter-spacing:.01em;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn-primary{background:var(--tomato);color:#fff;box-shadow:0 6px 0 var(--tomato-deep)}
+.btn-primary:active{transform:translateY(4px);box-shadow:0 2px 0 var(--tomato-deep)}
+.btn-green{background:var(--leaf);color:#fff;box-shadow:0 6px 0 var(--leaf-deep)}
+.btn-green:active{transform:translateY(4px);box-shadow:0 2px 0 var(--leaf-deep)}
+.btn-soft{background:var(--sun-soft);color:var(--ink);box-shadow:0 6px 0 #E7C77E}
+.btn-soft:active{transform:translateY(4px);box-shadow:0 2px 0 #E7C77E}
+.btn-plain{background:transparent;color:var(--muted);min-height:48px;font-size:1rem;font-family:var(--body);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:0 12px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+.howto h3{font-size:1.25rem;margin-bottom:8px}
+.legend{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.legend li{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:var(--r-sm);padding:6px 10px 6px 6px;font-weight:700;font-size:.92rem}
+.legend li svg{width:38px;height:38px;flex:none}
+.legend li small{display:block;font-weight:600;color:var(--muted);font-size:.78rem;line-height:1.2}
+.legend li.is-ripe{border-color:var(--tomato);background:#FFF0EF}
+.rules{margin:10px 0 0;padding-left:20px;color:var(--ink)}
+.rules li{margin:2px 0}
+
+.scores h3{font-size:1.2rem;margin-bottom:8px}
+.score-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.score-list li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;background:#fff;border-radius:var(--r-sm);padding:8px 12px;border:2px solid var(--line);font-variant-numeric:tabular-nums}
+.score-list .pos{font-family:var(--display);font-weight:800;color:var(--tomato)}
+.score-list .who{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800}
+.score-list .who small{display:block;font-weight:600;color:var(--muted);font-size:.78rem}
+.score-list .pts{font-family:var(--display);font-weight:800;font-size:1.15rem}
+.score-list li.me{border-color:var(--sun);background:var(--sun-soft)}
+.empty{color:var(--muted);margin:0}
+.clear-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:.9rem}
+
+/* ---------- Game ---------- */
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:var(--paper);border:2px solid var(--line);border-radius:var(--r-md);padding:8px 12px;display:flex;flex-direction:column}
+.stat .k{font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--display);font-weight:800;font-size:1.7rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat.time .v{color:var(--leaf-deep)}
+.stat.time.low .v{color:var(--bad)}
+.timebar{height:12px;border-radius:999px;background:var(--leaf-soft);overflow:hidden;border:2px solid var(--line)}
+.timebar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--leaf),#7CC35A);transform-origin:left;transition:transform .1s linear}
+.timebar.low i{background:linear-gradient(90deg,var(--bad),var(--sun))}
+.mission{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mission p{margin:0;font-weight:700}
+.mission strong{color:var(--tomato-deep)}
+.basket{display:flex;align-items:center;gap:8px;font-weight:800}
+.basket .pips{display:flex;gap:4px;flex-wrap:wrap}
+.basket .pip{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--tomato)}
+.basket .pip.on{background:var(--tomato)}
+
+.bed{
+  position:relative;border-radius:var(--r-lg);padding:clamp(12px,3vw,22px);
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,.35) 0 2px, transparent 3px) 0 0/34px 34px,
+    linear-gradient(180deg,#F3DFBE,#E8CFA5);
+  border:4px solid var(--soil-deep);
+  box-shadow:inset 0 -10px 0 rgba(160,110,60,.12);
+}
+.grid{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr));gap:clamp(6px,2vw,14px)}
+.tom{
+  position:relative;aspect-ratio:1/1;max-width:100%;border:none;padding:6%;cursor:pointer;
+  border-radius:50%;background:radial-gradient(circle at 50% 60%, rgba(76,140,60,.28), rgba(76,140,60,0) 68%);
+  display:flex;align-items:center;justify-content:center;touch-action:manipulation;
+}
+.tom svg{width:100%;height:100%;overflow:visible;transition:transform .15s ease}
+.tom:hover svg{transform:scale(1.06)}
+.tom:active svg{transform:scale(.94)}
+.tom .tag{
+  position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
+  background:rgba(255,253,248,.95);border:2px solid var(--line);border-radius:999px;
+  font-size:.7rem;font-weight:800;padding:0 7px;white-space:nowrap;pointer-events:none;
+}
+.helper-off .tom .tag{display:none}
+.tom.picked{pointer-events:none}
+.tom.picked svg{animation:pluck .55s cubic-bezier(.3,1.4,.6,1) forwards}
+.tom.wrong{pointer-events:none}
+.tom.wrong svg{animation:shake .4s ease;opacity:.45;filter:grayscale(.4)}
+.tom.wrong::after{
+  content:"";position:absolute;inset:22%;border-radius:50%;
+  background:
+    linear-gradient(45deg,transparent 44%,var(--bad) 44% 56%,transparent 56%),
+    linear-gradient(-45deg,transparent 44%,var(--bad) 44% 56%,transparent 56%);
+  opacity:.85;
+}
+.tom.missed svg{opacity:.5}
+.tom.missed::before{content:"";position:absolute;inset:4%;border-radius:50%;border:3px dashed var(--tomato)}
+.float{
+  position:absolute;pointer-events:none;font-family:var(--display);font-weight:800;font-size:1.5rem;
+  animation:floatUp .9s ease-out forwards;z-index:3;text-shadow:0 2px 0 #fff,0 0 6px #fff
+}
+.float.good{color:var(--good)}
+.float.bad{color:var(--bad)}
+.game-actions{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+
+/* Overlay between rounds */
+.overlay{
+  position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+  background:rgba(58,42,34,.42);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+}
+.dialog{
+  background:var(--paper);border-radius:var(--r-lg);border:3px solid var(--line);max-width:460px;width:100%;
+  padding:26px;display:flex;flex-direction:column;gap:12px;text-align:center;align-items:center;
+  animation:popIn .35s cubic-bezier(.3,1.4,.6,1);
+  max-height:100%;overflow:auto;
+}
+.dialog h2{font-size:2rem;color:var(--tomato-deep)}
+.dialog p{margin:0}
+.dialog .new{background:var(--sun-soft);border-radius:var(--r-md);padding:10px 14px;font-weight:700;display:flex;align-items:center;gap:10px;text-align:left}
+.dialog .new svg{width:44px;height:44px;flex:none}
+.round-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.round-summary div{background:#fff;border:2px solid var(--line);border-radius:var(--r-sm);padding:8px}
+.round-summary b{display:block;font-family:var(--display);font-size:1.4rem;font-variant-numeric:tabular-nums}
+.round-summary span{font-size:.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+/* ---------- Results ---------- */
+.results{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;align-items:start}
+.card-wrap{display:flex;flex-direction:column;gap:12px}
+.card-img{width:100%;max-width:440px;border-radius:var(--r-md);box-shadow:0 10px 30px rgba(120,70,30,.18);display:block;margin:0 auto;background:#fff;aspect-ratio:1080/1350}
+.res-head .eyebrow{display:block;margin-bottom:4px}
+.res-head h2{font-size:clamp(2rem,6vw,3rem);color:var(--tomato-deep)}
+.rank-pill{display:inline-block;margin-top:10px;background:var(--sun);color:var(--ink);font-family:var(--display);font-weight:800;font-size:1.3rem;border-radius:999px;padding:4px 18px 2px}
+.rank-line{margin:8px 0 0;color:var(--muted);font-weight:700}
+.res-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+.res-stats .stat .v{font-size:1.9rem}
+.breakdown{margin:14px 0 0;font-size:.95rem;color:var(--muted)}
+.breakdown b{color:var(--ink);font-variant-numeric:tabular-nums}
+.res-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+.res-actions .btn{flex:1 1 200px}
+.save-note{font-size:.88rem;color:var(--muted);text-align:center;margin:0}
+.toast{
+  position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  background:var(--ink);color:#fff;border-radius:999px;padding:10px 20px;font-weight:700;z-index:30;max-width:calc(100% - 32px);text-align:center;
+}
+.learn{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px}
+.learn h3{font-size:1.5rem;color:var(--leaf-deep);margin-bottom:10px}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start;counter-increment:s}
+.steps li::before{
+  content:counter(s);width:40px;height:40px;border-radius:50%;background:var(--leaf-soft);color:var(--leaf-deep);
+  font-family:var(--display);font-weight:800;font-size:1.2rem;display:flex;align-items:center;justify-content:center
+}
+.steps b{display:block}
+.steps p{margin:0;color:var(--muted);font-size:.95rem}
+.hsv{display:flex;height:22px;border-radius:999px;overflow:hidden;border:2px solid var(--line);margin:12px 0 4px;position:relative}
+.hsv i{flex:1}
+.hsv-cap{display:flex;justify-content:space-between;font-size:.75rem;font-weight:700;color:var(--muted)}
+.notice{background:var(--sun-soft);border:2px dashed #E3B651;border-radius:var(--r-md);padding:16px}
+.notice h4{font-family:var(--display);font-size:1.15rem;margin:0 0 4px}
+.notice p{margin:0 0 8px;font-size:.95rem}
+.survey{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.survey a.btn{text-decoration:none}
+.footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:8px}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
+@keyframes pluck{0%{transform:scale(1)}35%{transform:scale(1.18) translateY(-8%)}100%{transform:scale(.2) translateY(-140%);opacity:0}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9%)}40%{transform:translateX(8%)}60%{transform:translateX(-6%)}80%{transform:translateX(4%)}}
+@keyframes floatUp{0%{transform:translate(-50%,0);opacity:1}100%{transform:translate(-50%,-60px);opacity:0}}
+@keyframes popIn{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+
+@media (max-width:820px){
+  .welcome,.results,.learn{grid-template-columns:minmax(0,1fr)}
+  .hero{align-items:center;text-align:center}
+  .hero-art{margin:0 auto}
+  .lede{margin:0 auto}
+}
+@media (max-width:520px){
+  .hud{grid-template-columns:repeat(2,1fr)}
+  .stat .v{font-size:1.4rem}
+  .panel{padding:18px}
+  .btn{font-size:1.15rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .hero-art{animation:none}
+  .tom.picked svg{animation:none;opacity:.15}
+}
+</style>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">Technopreneurship 2026</span>
+      <span>Smart Harvest</span>
+    </div>
+    <div class="tool-row">
+      <button class="icon-btn" id="helperBtn" type="button" aria-pressed="false" title="Show colour names on tomatoes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h7"/></svg>
+        <span>Colour labels</span>
+      </button>
+      <button class="icon-btn" id="muteBtn" type="button" aria-pressed="false">
+        <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+        <span id="muteLabel">Sound on</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========== WELCOME ========== -->
+  <main id="screenWelcome" class="welcome">
+    <section class="hero" aria-labelledby="gameTitle">
+      <div class="hero-art" id="heroArt" aria-hidden="true"></div>
+      <span class="eyebrow">UNISSA · Brunei Darussalam</span>
+      <h1 class="title" id="gameTitle">Smart Harvest <span>Tomato Detective</span></h1>
+      <p class="lede">A smart harvester only picks tomatoes that are ready. Can your eyes beat the robot? Tap the ripe red ones before the timer runs out.</p>
+    </section>
+
+    <section class="panel form" aria-label="Start the game">
+      <form id="startForm" novalidate>
+        <div class="field">
+          <label for="nickname">Your detective nickname</label>
+          <input id="nickname" name="nickname" type="text" maxlength="16" autocomplete="off" autocapitalize="words" enterkeyhint="go" placeholder="e.g. Aisyah" aria-describedby="nickHint nickError">
+          <p class="hint" id="nickHint">2 to 16 letters or numbers. It appears on your Tomato Buddy card.</p>
+          <p class="error" id="nickError" role="alert" hidden></p>
+        </div>
+        <div style="margin-top:16px">
+          <button class="btn btn-primary" id="startBtn" type="submit" style="width:100%">Start Game</button>
+        </div>
+      </form>
+
+      <div class="howto">
+        <h3>How to play</h3>
+        <ul class="legend" id="legend"></ul>
+        <ol class="rules">
+          <li>Tap <b>only ripe red</b> tomatoes. Each one is <b>+10</b>.</li>
+          <li>Tapping a tomato that is not ready costs <b>−5</b>.</li>
+          <li>Clear every ripe tomato to earn <b>+2 per second</b> left.</li>
+          <li>5 rounds. Each one is faster with trickier colours.</li>
+        </ol>
+      </div>
+
+      <div class="scores">
+        <h3>Top harvesters on this device</h3>
+        <ol class="score-list" id="hsWelcome"></ol>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========== GAME ========== -->
+  <main id="screenGame" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="hud" role="group" aria-label="Game status">
+        <div class="stat"><span class="k">Score</span><span class="v" id="hudScore">0</span></div>
+        <div class="stat time" id="hudTimeBox"><span class="k">Time left</span><span class="v" id="hudTime">20</span></div>
+        <div class="stat"><span class="k">Round</span><span class="v" id="hudRound">1/5</span></div>
+        <div class="stat"><span class="k">Accuracy</span><span class="v" id="hudAcc">–</span></div>
+      </div>
+      <div class="timebar" id="timebar" aria-hidden="true"><i id="timefill"></i></div>
+      <div class="mission">
+        <p id="missionText">Find the <strong>ripe red</strong> tomatoes.</p>
+        <div class="basket" aria-label="Ripe tomatoes harvested this round">
+          <span>Basket</span><span class="pips" id="pips"></span>
+        </div>
+      </div>
+      <div class="bed" id="bed">
+        <div class="grid" id="grid" role="group" aria-label="Tomato plants"></div>
+      </div>
+      <div class="game-actions">
+        <button class="btn btn-plain" id="quitBtn" type="button">Quit to start</button>
+        <span class="hint" style="margin:0">Tip: orange and pink are close, but not ready yet.</span>
+      </div>
+    </div>
+    <p class="sr-only" aria-live="assertive" id="live"></p>
+  </main>
+
+  <!-- ========== RESULTS ========== -->
+  <main id="screenResults" hidden>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <section class="results">
+        <div class="card-wrap">
+          <img class="card-img" id="cardImg" alt="Your Tomato Buddy card">
+          <p class="save-note">On a phone you can also press and hold the card to save it.</p>
+        </div>
+        <div class="panel">
+          <div class="res-head">
+            <span class="eyebrow">Harvest complete</span>
+            <h2 id="resTitle">Well done!</h2>
+            <span class="rank-pill" id="resRank">Smart Farmer</span>
+            <p class="rank-line" id="resRankLine"></p>
+          </div>
+          <div class="res-stats">
+            <div class="stat"><span class="k">Final score</span><span class="v" id="resScore">0</span></div>
+            <div class="stat"><span class="k">Accuracy</span><span class="v" id="resAcc">0%</span></div>
+            <div class="stat"><span class="k">Ripe harvested</span><span class="v" id="resHarvest">0/0</span></div>
+            <div class="stat"><span class="k">Wrong picks</span><span class="v" id="resWrong">0</span></div>
+          </div>
+          <p class="breakdown" id="resBreakdown"></p>
+          <div class="res-actions">
+            <button class="btn btn-green" id="downloadBtn" type="button">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+              Download card
+            </button>
+            <button class="btn btn-primary" id="againBtn" type="button">Play Again</button>
+            <button class="btn btn-soft" id="newPlayerBtn" type="button">Next player</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="learn">
+        <div class="panel">
+          <h3>How a smart harvester spots ripe tomatoes</h3>
+          <ol class="steps">
+            <li><div><b>The webcam takes a picture</b><p>A camera on the Smart Harvest robot looks at the tomato plant.</p></div></li>
+            <li><div><b>The Raspberry Pi reads the colours</b><p>It converts each pixel to hue, saturation and brightness (HSV). Hue makes "how red is it?" easier to measure under changing light.</p></div></li>
+            <li><div><b>It keeps only the red range</b><p>Pixels inside the ripe-red hue range are kept. Green, orange and pink fall outside it.</p></div></li>
+            <li><div><b>The arm reaches for the target</b><p>Red pixels are grouped into tomato-shaped blobs. The position of each blob tells the robotic arm where to reach.</p></div></li>
+          </ol>
+          <div class="hsv" aria-hidden="true">
+            <i style="background:#D7263D"></i><i style="background:#E8452F"></i><i style="background:#F4846F"></i><i style="background:#F39237"></i><i style="background:#F6C340"></i><i style="background:#C9D640"></i><i style="background:#8CC63F"></i><i style="background:#4FA342"></i>
+          </div>
+          <div class="hsv-cap"><span>Ripe red: pick</span><span>Turning</span><span>Unripe green: leave</span></div>
+        </div>
+        <div class="notice">
+          <h4>This game is a simulation</h4>
+          <p>In this game, <b>you</b> are the detector. The tomatoes are drawings, and the game already knows which ones are ripe. No camera, image processing or AI is running here.</p>
+          <p>The real Smart Harvest prototype uses a webcam and colour-based detection on a Raspberry Pi. Real fields add shadows, leaves covering the fruit and different tomato varieties, so the colour ranges must be tested and tuned.</p>
+          <div class="survey">
+            <a class="btn btn-primary" id="surveyLink" href="#" target="_blank" rel="noopener">Take the Smart Harvest survey</a>
+            <p class="hint" id="surveyNote" style="margin:0;text-align:center"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel scores">
+        <h3>Top harvesters on this device</h3>
+        <ol class="score-list" id="hsResults"></ol>
+        <div class="clear-row">
+          <button class="btn btn-plain" id="clearBtn" type="button">Clear high scores</button>
+          <span id="clearConfirm" hidden>
+            Clear all saved scores?
+            <button class="icon-btn" id="clearYes" type="button">Yes, clear</button>
+            <button class="icon-btn" id="clearNo" type="button">Keep</button>
+          </span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <p class="footer">Smart Harvest · Tomato Detective · Technopreneurship 2026 · Brunei Darussalam</p>
+</div>
+
+<!-- Round dialog -->
+<div class="overlay" id="overlay" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <span class="eyebrow" id="dlgEyebrow">Round 1 of 5</span>
+    <h2 id="dlgTitle">Get ready!</h2>
+    <div class="round-summary" id="dlgSummary" hidden></div>
+    <p id="dlgText"></p>
+    <div class="new" id="dlgNew" hidden></div>
+    <button class="btn btn-primary" id="dlgBtn" type="button" style="width:100%">Start round</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<canvas id="cardCanvas" width="1080" height="1350" hidden></canvas>
+
+<script>
+/* =========================================================
+   SETTINGS — edit these before the event
+   ========================================================= */
+const SURVEY_URL = "PASTE-YOUR-SURVEY-LINK-HERE"; // e.g. https://your-username.github.io/smart-harvest-survey/
+const EVENT_NAME = "Technopreneurship 2026";
+const STORE_KEY  = "smartHarvest.tomatoDetective.v1";
+
+/* =========================================================
+   LOGIC-START  (pure functions — tested separately)
+   ========================================================= */
+const POINTS = { correct: 10, wrong: 5, bonusPerSecond: 2 };
+
+const TYPES = {
+  ripe:    { label: "Ripe red",    short: "Red",     note: "Ready. Pick it!",       fill: "#D7263D", shade: "#9E1A2C", ripe: true },
+  green:   { label: "Green",       short: "Green",   note: "Unripe. Leave it.",     fill: "#8CC63F", shade: "#5D9628", ripe: false },
+  turning: { label: "Orange",      short: "Orange",  note: "Turning. Not yet.",     fill: "#F39237", shade: "#C2661A", ripe: false },
+  pink:    { label: "Pink",        short: "Pink",    note: "Nearly ripe. Not yet.", fill: "#F4846F", shade: "#D35A46", ripe: false },
+  spoiled: { label: "Brown spots", short: "Spoiled", note: "Spoiled. Skip it.",     fill: "#9A6A45", shade: "#62402A", ripe: false, spots: true }
+};
+
+const ROUNDS = [
+  { total: 9,  ripe: 4, decoys: ["green"],                              time: 20, cols: 3, intro: "Easy start: red or green?" },
+  { total: 12, ripe: 5, decoys: ["green", "turning"],                   time: 18, cols: 4, intro: "Orange tomatoes are turning. Not ready yet!", newType: "turning" },
+  { total: 12, ripe: 5, decoys: ["green", "turning", "spoiled"],        time: 16, cols: 4, intro: "Watch out for spoiled tomatoes with brown spots.", newType: "spoiled" },
+  { total: 16, ripe: 6, decoys: ["green", "turning", "pink", "spoiled"], time: 15, cols: 4, intro: "Pink tomatoes are nearly ripe. Look closely!", newType: "pink" },
+  { total: 16, ripe: 7, decoys: ["pink", "turning", "spoiled", "green"], time: 12, cols: 4, intro: "Final round. Fast hands, sharp eyes!" }
+];
+
+const RANKS = [
+  { min: 0.90, title: "Master Harvester",  line: "Robot-level precision. The arm could learn from you!", level: 3 },
+  { min: 0.75, title: "Smart Farmer",      line: "Great eye for ripeness. Almost no wasted picks.",     level: 2 },
+  { min: 0.50, title: "Sharp-Eyed Sprout", line: "Good spotting. A little more practice and you'll bloom.", level: 1 },
+  { min: 0,    title: "Seedling Scout",    line: "Every harvester starts as a seedling. Try again!",    level: 0 }
+];
+
+function newStats() {
+  return { score: 0, correct: 0, wrong: 0, bonus: 0, ripeShown: 0 };
+}
+
+/* One tap. Score never drops below zero. */
+function applyTap(stats, isRipe) {
+  const s = { ...stats };
+  if (isRipe) { s.correct += 1; s.score += POINTS.correct; }
+  else        { s.wrong += 1;   s.score = Math.max(0, s.score - POINTS.wrong); }
+  return s;
+}
+
+/* Time bonus only when every ripe tomato in the round was harvested. */
+function roundBonus(cleared, secondsLeft) {
+  if (!cleared) return 0;
+  return Math.max(0, Math.floor(secondsLeft)) * POINTS.bonusPerSecond;
+}
+
+function addBonus(stats, bonus) {
+  return { ...stats, score: stats.score + bonus, bonus: stats.bonus + bonus };
+}
+
+function accuracy(correct, wrong) {
+  const taps = correct + wrong;
+  return taps === 0 ? 0 : correct / taps;
+}
+
+function harvestRate(correct, ripeShown) {
+  return ripeShown === 0 ? 0 : Math.min(1, correct / ripeShown);
+}
+
+/* Rank = accuracy × harvest rate, so careful AND complete players rank highest. */
+function rankFor(stats) {
+  const perf = accuracy(stats.correct, stats.wrong) * harvestRate(stats.correct, stats.ripeShown);
+  const r = RANKS.find(rk => perf >= rk.min) || RANKS[RANKS.length - 1];
+  return { ...r, performance: perf };
+}
+
+function validateNickname(raw) {
+  const value = String(raw == null ? "" : raw).replace(/\s+/g, " ").trim();
+  if (value.length === 0) return { ok: false, value, error: "Please type a nickname to start." };
+  if (value.length < 2)   return { ok: false, value, error: "Nickname needs at least 2 characters." };
+  if (value.length > 16)  return { ok: false, value, error: "Nickname can be up to 16 characters." };
+  if (!/^[\p{L}\p{N}][\p{L}\p{N} ._'-]*$/u.test(value))
+    return { ok: false, value, error: "Use letters, numbers, spaces, dots, dashes or apostrophes only." };
+  if (!/[\p{L}\p{N}]{2,}|[\p{L}\p{N}].*[\p{L}\p{N}]/u.test(value))
+    return { ok: false, value, error: "Nickname needs at least 2 letters or numbers." };
+  return { ok: true, value, error: "" };
+}
+
+/* Builds a shuffled field: exactly cfg.ripe ripe tomatoes, decoys spread evenly. */
+function buildRound(cfg, rand) {
+  rand = rand || Math.random;
+  const items = [];
+  for (let i = 0; i < cfg.ripe; i++) items.push("ripe");
+  const nDecoy = cfg.total - cfg.ripe;
+  for (let i = 0; i < nDecoy; i++) items.push(cfg.decoys[i % cfg.decoys.length]);
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+function insertHighScore(list, entry, max) {
+  max = max || 5;
+  const next = list.concat([entry]);
+  next.sort((a, b) => b.score - a.score || a.time - b.time);
+  return next.slice(0, max);
+}
+/* LOGIC-END */
+
+/* =========================================================
+   UI
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---- storage (safe if blocked) ---- */
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+}
+function saveStore(patch) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ ...loadStore(), ...patch })); } catch (e) {}
+}
+
+/* ---- tomato drawing (SVG) ---- */
+function tomatoSVG(typeKey, opts) {
+  opts = opts || {};
+  const t = TYPES[typeKey] || TYPES.ripe;
+  const uid = Math.random().toString(36).slice(2, 8);
+  const spots = t.spots
+    ? `<circle cx="38" cy="62" r="6" fill="#4A2C18" opacity=".75"/><circle cx="62" cy="52" r="4.5" fill="#4A2C18" opacity=".7"/><circle cx="58" cy="74" r="3.5" fill="#4A2C18" opacity=".7"/>`
+    : "";
+  const face = opts.face
+    ? `<g>
+         <ellipse cx="38" cy="56" rx="4.5" ry="6" fill="#2B1B14"/><circle cx="39.5" cy="53.5" r="1.6" fill="#fff"/>
+         <ellipse cx="62" cy="56" rx="4.5" ry="6" fill="#2B1B14"/><circle cx="63.5" cy="53.5" r="1.6" fill="#fff"/>
+         <ellipse cx="29" cy="66" rx="6" ry="3.5" fill="#FF8FA3" opacity=".7"/><ellipse cx="71" cy="66" rx="6" ry="3.5" fill="#FF8FA3" opacity=".7"/>
+         <path d="M42 66 Q50 75 58 66" fill="none" stroke="#2B1B14" stroke-width="3" stroke-linecap="round"/>
+       </g>`
+    : "";
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <defs><radialGradient id="g${uid}" cx="38%" cy="38%" r="70%"><stop offset="0" stop-color="${t.fill}"/><stop offset="1" stop-color="${t.shade}"/></radialGradient></defs>
+    <ellipse cx="50" cy="94" rx="30" ry="4" fill="#6B4A2B" opacity=".18"/>
+    <path d="M50 22 C 22 22 8 40 9 58 C 10 78 28 91 50 91 C 72 91 90 78 91 58 C 92 40 78 22 50 22 Z" fill="url(#g${uid})"/>
+    <path d="M36 28 C 30 45 30 70 38 88" fill="none" stroke="${t.shade}" stroke-width="2" opacity=".35"/>
+    <path d="M64 28 C 70 45 70 70 62 88" fill="none" stroke="${t.shade}" stroke-width="2" opacity=".35"/>
+    ${spots}
+    <ellipse cx="31" cy="40" rx="9" ry="5.5" fill="#fff" opacity=".5" transform="rotate(-35 31 40)"/>
+    <path d="M50 30 L41 20 L49 23 L44 11 L52 21 L58 12 L56 23 L66 19 L57 29 L64 33 L52 31 L48 36 L46 31 L35 32 Z" fill="#2F7D32"/>
+    <rect x="47.5" y="6" width="5" height="13" rx="2.5" fill="#2A6A2E"/>
+    ${face}
+  </svg>`;
+}
+
+/* ---- sound (Web Audio, starts after first tap) ---- */
+const Sound = {
+  ctx: null,
+  muted: !!loadStore().muted,
+  ensure() {
+    if (this.ctx) { if (this.ctx.state === "suspended") this.ctx.resume(); return; }
+    try { const AC = window.AudioContext || window.webkitAudioContext; if (AC) this.ctx = new AC(); } catch (e) { this.ctx = null; }
+  },
+  tone(freq, start, dur, type, vol) {
+    if (this.muted || !this.ctx) return;
+    const c = this.ctx, t0 = c.currentTime + start;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.18, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(c.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  },
+  good()  { this.tone(660, 0, .12, "triangle"); this.tone(990, .07, .16, "triangle"); },
+  bad()   { this.tone(180, 0, .22, "square", .08); this.tone(140, .08, .2, "square", .07); },
+  tick()  { this.tone(880, 0, .06, "sine", .1); },
+  clear() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * .08, .18, "triangle", .15)); },
+  end()   { [784, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, i * .11, .22, "triangle", .15)); }
+};
+
+function renderMute() {
+  $("muteBtn").setAttribute("aria-pressed", String(Sound.muted));
+  $("muteLabel").textContent = Sound.muted ? "Sound off" : "Sound on";
+  $("soundIcon").innerHTML = Sound.muted
+    ? '<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/>'
+    : '<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/>';
+}
+$("muteBtn").addEventListener("click", () => {
+  Sound.muted = !Sound.muted; saveStore({ muted: Sound.muted }); renderMute();
+  if (!Sound.muted) { Sound.ensure(); Sound.good(); }
+});
+
+/* ---- colour labels helper ---- */
+let helperOn = !!loadStore().helper;
+function renderHelper() {
+  $("helperBtn").setAttribute("aria-pressed", String(helperOn));
+  $("bed").classList.toggle("helper-off", !helperOn);
+}
+$("helperBtn").addEventListener("click", () => { helperOn = !helperOn; saveStore({ helper: helperOn }); renderHelper(); });
+
+/* ---- toast ---- */
+let toastTimer;
+function toast(msg) {
+  const el = $("toast"); el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
+}
+
+/* ---- screens ---- */
+function show(screen) {
+  ["screenWelcome", "screenGame", "screenResults"].forEach(id => { $(id).hidden = id !== screen; });
+  window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+}
+
+/* ---- high scores ---- */
+function getScores() { const s = loadStore().scores; return Array.isArray(s) ? s : []; }
+function renderScores(listEl, highlightTime) {
+  const scores = getScores();
+  listEl.innerHTML = "";
+  if (!scores.length) {
+    const li = document.createElement("li"); li.className = "empty"; li.style.border = "none"; li.style.background = "none";
+    li.textContent = "No scores yet. Be the first harvester!"; listEl.appendChild(li); return;
+  }
+  scores.forEach((s, i) => {
+    const li = document.createElement("li");
+    if (highlightTime && s.time === highlightTime) li.className = "me";
+    const pos = document.createElement("span"); pos.className = "pos"; pos.textContent = i + 1;
+    const who = document.createElement("span"); who.className = "who"; who.textContent = s.name;
+    const sm = document.createElement("small"); sm.textContent = s.rank; who.appendChild(sm);
+    const pts = document.createElement("span"); pts.className = "pts"; pts.textContent = s.score;
+    li.append(pos, who, pts); listEl.appendChild(li);
+  });
+}
+
+/* ---- legend ---- */
+function renderLegend() {
+  const ul = $("legend"); ul.innerHTML = "";
+  ["ripe", "green", "turning", "pink", "spoiled"].forEach(k => {
+    const t = TYPES[k];
+    const li = document.createElement("li"); if (t.ripe) li.className = "is-ripe";
+    li.innerHTML = tomatoSVG(k) + `<span>${t.label}<small>${t.note}</small></span>`;
+    ul.appendChild(li);
+  });
+}
+
+/* =========================================================
+   GAME STATE
+   ========================================================= */
+const G = {
+  name: "", round: 0, stats: newStats(), roundRipeLeft: 0, roundHarvested: 0,
+  roundWrong: 0, active: false, endAt: 0, remaining: 0, timer: null, lastTick: null,
+  dlgAction: null, lastResult: null
+};
+
+function startGame(name) {
+  Sound.ensure();
+  G.name = name; G.round = 0; G.stats = newStats(); G.lastResult = null;
+  saveStore({ lastName: name });
+  show("screenGame");
+  prepareRound();
+}
+
+function prepareRound() {
+  const cfg = ROUNDS[G.round];
+  const items = buildRound(cfg);
+  G.roundRipeLeft = cfg.ripe; G.roundHarvested = 0; G.roundWrong = 0;
+  G.stats = { ...G.stats, ripeShown: G.stats.ripeShown + cfg.ripe };
+  G.remaining = cfg.time; G.active = false;
+
+  const grid = $("grid"); grid.innerHTML = ""; grid.style.setProperty("--cols", cfg.cols);
+  items.forEach((k, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "tom"; b.dataset.type = k; b.disabled = true;
+    b.setAttribute("aria-label", `Tomato ${i + 1}: ${TYPES[k].label}`);
+    b.innerHTML = tomatoSVG(k) + `<span class="tag">${TYPES[k].short}</span>`;
+    b.addEventListener("click", onTomato);
+    grid.appendChild(b);
+  });
+  renderPips(); renderHud(); renderTime(cfg.time, cfg.time);
+  $("missionText").innerHTML = `Find all <strong>${cfg.ripe} ripe red</strong> tomatoes.`;
+
+  const nt = cfg.newType ? TYPES[cfg.newType] : null;
+  openDialog({
+    eyebrow: `Round ${G.round + 1} of ${ROUNDS.length}`,
+    title: G.round === 0 ? `Ready, ${G.name}?` : `Round ${G.round + 1}`,
+    text: `${cfg.intro} You have ${cfg.time} seconds.`,
+    newHTML: nt ? tomatoSVG(cfg.newType) + `<span><b>New: ${nt.label}.</b> ${nt.note}</span>` : "",
+    button: "Start round",
+    action: beginRound
+  });
+}
+
+function beginRound() {
+  closeDialog();
+  document.querySelectorAll("#grid .tom").forEach(b => { b.disabled = false; });
+  G.active = true;
+  G.endAt = performance.now() + G.remaining * 1000;
+  G.lastTick = Math.ceil(G.remaining);
+  clearInterval(G.timer);
+  G.timer = setInterval(tick, 100);
+  const first = document.querySelector("#grid .tom"); if (first) first.focus({ preventScroll: true });
+  announce(`Round ${G.round + 1} started. Find ${ROUNDS[G.round].ripe} ripe red tomatoes.`);
+}
+
+function tick() {
+  if (!G.active) return;
+  const cfg = ROUNDS[G.round];
+  G.remaining = Math.max(0, (G.endAt - performance.now()) / 1000);
+  renderTime(G.remaining, cfg.time);
+  const whole = Math.ceil(G.remaining);
+  if (whole < G.lastTick) { G.lastTick = whole; if (whole <= 3 && whole > 0) Sound.tick(); }
+  if (G.remaining <= 0) endRound(false);
+}
+
+function onTomato(ev) {
+  const b = ev.currentTarget;
+  if (!G.active || b.classList.contains("picked") || b.classList.contains("wrong")) return;
+  const t = TYPES[b.dataset.type];
+  G.stats = applyTap(G.stats, t.ripe);
+  if (t.ripe) {
+    b.classList.add("picked"); b.setAttribute("aria-label", "Harvested"); b.disabled = true;
+    G.roundRipeLeft -= 1; G.roundHarvested += 1;
+    Sound.good(); floatText(b, `+${POINTS.correct}`, "good");
+    announce(`Ripe! Plus ${POINTS.correct}. ${G.roundRipeLeft} left.`);
+  } else {
+    b.classList.add("wrong"); b.setAttribute("aria-label", `${t.label}: not ready`); b.disabled = true;
+    G.roundWrong += 1;
+    Sound.bad(); floatText(b, `−${POINTS.wrong}`, "bad");
+    announce(`${t.label} is not ready. Minus ${POINTS.wrong}.`);
+  }
+  renderHud(); renderPips();
+  if (G.roundRipeLeft === 0) endRound(true);
+  else focusNext(b);
+}
+
+function focusNext(b) {
+  if (document.activeElement !== b) return;
+  const next = [...document.querySelectorAll("#grid .tom")].find(x => !x.disabled);
+  if (next) next.focus({ preventScroll: true });
+}
+
+function endRound(cleared) {
+  if (!G.active) return;
+  G.active = false; clearInterval(G.timer);
+  const bonus = roundBonus(cleared, G.remaining);
+  G.stats = addBonus(G.stats, bonus);
+  document.querySelectorAll("#grid .tom").forEach(b => {
+    b.disabled = true;
+    if (b.dataset.type === "ripe" && !b.classList.contains("picked")) b.classList.add("missed");
+  });
+  renderHud();
+  const isLast = G.round === ROUNDS.length - 1;
+  if (cleared) Sound.clear(); else Sound.bad();
+  const cfg = ROUNDS[G.round];
+  const summary = [
+    [`${G.roundHarvested}/${cfg.ripe}`, "Harvested"],
+    [String(G.roundWrong), "Wrong"],
+    [`+${bonus}`, "Time bonus"]
+  ];
+  setTimeout(() => openDialog({
+    eyebrow: `Round ${G.round + 1} of ${ROUNDS.length}`,
+    title: cleared ? "Basket full!" : "Time's up!",
+    summary,
+    text: cleared
+      ? `You cleared the field with ${Math.floor(G.remaining)} seconds left.`
+      : (G.roundHarvested < cfg.ripe ? "Dashed circles show the ripe tomatoes you missed." : ""),
+    button: isLast ? "See my results" : "Next round",
+    action: () => { closeDialog(); if (isLast) finishGame(); else { G.round += 1; prepareRound(); } }
+  }), reduceMotion ? 50 : 650);
+}
+
+function finishGame() {
+  Sound.end();
+  const s = G.stats, rank = rankFor(s), acc = accuracy(s.correct, s.wrong);
+  const entry = { name: G.name, score: s.score, rank: rank.title, time: Date.now() };
+  saveStore({ scores: insertHighScore(getScores(), entry, 5) });
+  G.lastResult = { ...s, rank, acc, time: entry.time, date: new Date() };
+
+  $("resTitle").textContent = `Well done, ${G.name}!`;
+  $("resRank").textContent = rank.title;
+  $("resRankLine").textContent = rank.line;
+  $("resScore").textContent = s.score;
+  $("resAcc").textContent = Math.round(acc * 100) + "%";
+  $("resHarvest").textContent = `${s.correct}/${s.ripeShown}`;
+  $("resWrong").textContent = s.wrong;
+  const basePts = s.correct * POINTS.correct;
+  $("resBreakdown").innerHTML =
+    `Ripe picks <b>${s.correct} × ${POINTS.correct} = ${basePts}</b> · Wrong picks <b>−${s.wrong * POINTS.wrong}</b> · Time bonus <b>+${s.bonus}</b> · Final <b>${s.score}</b>` +
+    (basePts - s.wrong * POINTS.wrong + s.bonus !== s.score ? " (score never goes below 0)" : "") +
+    `<br>Rank is based on accuracy × ripe tomatoes harvested.`;
+  renderScores($("hsResults"), entry.time);
+  renderScores($("hsWelcome"));
+  show("screenResults");
+  drawCard().then(() => {}).catch(() => {});
+  setTimeout(() => $("resTitle").setAttribute("tabindex", "-1") || $("resTitle").focus({ preventScroll: true }), 50);
+}
+
+function quitGame() {
+  G.active = false; clearInterval(G.timer); closeDialog();
+  renderScores($("hsWelcome"));
+  show("screenWelcome");
+  $("nickname").focus({ preventScroll: true });
+}
+
+/* ---- HUD rendering ---- */
+function renderHud() {
+  const s = G.stats;
+  $("hudScore").textContent = s.score;
+  $("hudRound").textContent = `${G.round + 1}/${ROUNDS.length}`;
+  $("hudAcc").textContent = (s.correct + s.wrong) ? Math.round(accuracy(s.correct, s.wrong) * 100) + "%" : "–";
+}
+function renderTime(left, total) {
+  $("hudTime").textContent = Math.ceil(left);
+  $("timefill").style.transform = `scaleX(${Math.max(0, left / total)})`;
+  const low = left <= 5;
+  $("hudTimeBox").classList.toggle("low", low);
+  $("timebar").classList.toggle("low", low);
+}
+function renderPips() {
+  const cfg = ROUNDS[G.round], el = $("pips"); el.innerHTML = "";
+  for (let i = 0; i < cfg.ripe; i++) {
+    const p = document.createElement("span"); p.className = "pip" + (i < G.roundHarvested ? " on" : ""); el.appendChild(p);
+  }
+}
+function floatText(b, text, cls) {
+  const bed = $("bed"), r = b.getBoundingClientRect(), br = bed.getBoundingClientRect();
+  const f = document.createElement("span"); f.className = `float ${cls}`; f.textContent = text;
+  f.style.left = (r.left - br.left + r.width / 2) + "px"; f.style.top = (r.top - br.top + r.height * .2) + "px";
+  bed.appendChild(f); setTimeout(() => f.remove(), 950);
+}
+function announce(msg) { $("live").textContent = msg; }
+
+/* ---- dialog ---- */
+function openDialog(o) {
+  $("dlgEyebrow").textContent = o.eyebrow || "";
+  $("dlgTitle").textContent = o.title || "";
+  $("dlgText").textContent = o.text || ""; $("dlgText").hidden = !o.text;
+  const n = $("dlgNew"); n.innerHTML = o.newHTML || ""; n.hidden = !o.newHTML;
+  const sm = $("dlgSummary");
+  if (o.summary) {
+    sm.innerHTML = ""; o.summary.forEach(([v, k]) => { const d = document.createElement("div"); d.innerHTML = `<b></b><span></span>`; d.firstChild.textContent = v; d.lastChild.textContent = k; sm.appendChild(d); });
+    sm.hidden = false;
+  } else sm.hidden = true;
+  $("dlgBtn").textContent = o.button || "OK";
+  G.dlgAction = o.action;
+  $("overlay").hidden = false;
+  $("dlgBtn").focus({ preventScroll: true });
+}
+function closeDialog() { $("overlay").hidden = true; G.dlgAction = null; }
+$("dlgBtn").addEventListener("click", () => { const a = G.dlgAction; if (a) a(); });
+$("overlay").addEventListener("keydown", e => { if (e.key === "Tab") { e.preventDefault(); $("dlgBtn").focus(); } });
+
+/* pause the clock when the tab is hidden */
+document.addEventListener("visibilitychange", () => {
+  if (!G.active) return;
+  if (document.hidden) { G.remaining = Math.max(0, (G.endAt - performance.now()) / 1000); clearInterval(G.timer); }
+  else { G.endAt = performance.now() + G.remaining * 1000; clearInterval(G.timer); G.timer = setInterval(tick, 100); }
+});
+
+/* =========================================================
+   TOMATO BUDDY CARD (canvas → PNG)
+   ========================================================= */
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function fitFont(ctx, text, weight, family, maxSize, maxWidth) {
+  let size = maxSize;
+  do { ctx.font = `${weight} ${size}px ${family}`; size -= 2; } while (ctx.measureText(text).width > maxWidth && size > 20);
+}
+function drawBuddy(ctx, cx, cy, r, level) {
+  ctx.save();
+  // shadow
+  ctx.fillStyle = "rgba(107,74,43,.16)"; ctx.beginPath(); ctx.ellipse(cx, cy + r * 1.02, r * .8, r * .1, 0, 0, Math.PI * 2); ctx.fill();
+  // body
+  const g = ctx.createRadialGradient(cx - r * .35, cy - r * .35, r * .1, cx, cy, r * 1.2);
+  g.addColorStop(0, "#F2505E"); g.addColorStop(.55, "#D7263D"); g.addColorStop(1, "#9E1A2C");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy, r * 1.1, r, 0, 0, Math.PI * 2); ctx.fill();
+  // lobes
+  ctx.strokeStyle = "rgba(120,20,35,.25)"; ctx.lineWidth = r * .04;
+  ctx.beginPath(); ctx.moveTo(cx - r * .35, cy - r * .9); ctx.quadraticCurveTo(cx - r * .55, cy, cx - r * .3, cy + r * .92); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + r * .35, cy - r * .9); ctx.quadraticCurveTo(cx + r * .55, cy, cx + r * .3, cy + r * .92); ctx.stroke();
+  // shine
+  ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.beginPath(); ctx.ellipse(cx - r * .55, cy - r * .45, r * .2, r * .12, -0.6, 0, Math.PI * 2); ctx.fill();
+  // calyx
+  ctx.fillStyle = "#2F7D32"; ctx.beginPath();
+  const pts = 6, top = cy - r * .92;
+  for (let i = 0; i < pts * 2; i++) {
+    const ang = Math.PI * i / pts - Math.PI / 2, rad = i % 2 === 0 ? r * .42 : r * .14;
+    const x = cx + Math.cos(ang) * rad * 1.2, y = top + Math.sin(ang) * rad * .55;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#2A6A2E"; rr(ctx, cx - r * .05, top - r * .32, r * .1, r * .32, r * .05); ctx.fill();
+  // leaf arms waving
+  ctx.fillStyle = "#3B8B3F";
+  [[-1, -0.5], [1, 0.5]].forEach(([side, rot]) => {
+    ctx.save(); ctx.translate(cx + side * r * 1.12, cy + r * .1); ctx.rotate(rot - (level >= 2 ? side * .5 : 0));
+    ctx.beginPath(); ctx.ellipse(side * r * .18, -r * .1, r * .22, r * .1, side * -.6, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  });
+  // eyes
+  const ey = cy - r * .05, ex = r * .32;
+  ctx.fillStyle = "#2B1B14";
+  if (level >= 3) {
+    ctx.lineWidth = r * .06; ctx.strokeStyle = "#2B1B14"; ctx.lineCap = "round";
+    [-1, 1].forEach(s => { ctx.beginPath(); ctx.arc(cx + s * ex, ey + r * .04, r * .1, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke(); });
+  } else {
+    [-1, 1].forEach(s => {
+      ctx.fillStyle = "#2B1B14"; ctx.beginPath(); ctx.ellipse(cx + s * ex, ey, r * .085, r * .12, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(cx + s * ex + r * .03, ey - r * .05, r * .035, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+  // blush
+  ctx.fillStyle = "rgba(255,143,163,.75)";
+  [-1, 1].forEach(s => { ctx.beginPath(); ctx.ellipse(cx + s * r * .58, cy + r * .17, r * .13, r * .07, 0, 0, Math.PI * 2); ctx.fill(); });
+  // mouth
+  ctx.strokeStyle = "#2B1B14"; ctx.lineWidth = r * .055; ctx.lineCap = "round";
+  const my = cy + r * .2, mw = [.12, .16, .2, .22][level];
+  if (level >= 2) {
+    ctx.fillStyle = "#5A1A1A"; ctx.beginPath(); ctx.moveTo(cx - r * mw, my); ctx.quadraticCurveTo(cx, my + r * .38, cx + r * mw, my); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#FF7A8A"; ctx.beginPath(); ctx.ellipse(cx, my + r * .15, r * .08, r * .05, 0, 0, Math.PI * 2); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.moveTo(cx - r * mw, my); ctx.quadraticCurveTo(cx, my + r * (.12 + level * .06), cx + r * mw, my); ctx.stroke();
+  }
+  // sparkles for top rank
+  if (level >= 3) {
+    ctx.fillStyle = "#F6B93B";
+    [[-1.35, -0.85, .12], [1.3, -0.95, .16], [1.45, -0.3, .09]].forEach(([dx, dy, s]) => star(ctx, cx + dx * r, cy + dy * r, s * r));
+  }
+  ctx.restore();
+}
+function star(ctx, x, y, s) {
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) { const a = Math.PI * i / 4, rad = i % 2 ? s * .35 : s; ctx.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad); }
+  ctx.closePath(); ctx.fill();
+}
+
+async function drawCard() {
+  const res = G.lastResult; if (!res) return;
+  try { if (document.fonts && document.fonts.ready) { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]); } } catch (e) {}
+  const c = $("cardCanvas"), ctx = c.getContext("2d"), W = 1080, H = 1350;
+  const D = '"Baloo 2", "Trebuchet MS", sans-serif', B = 'Nunito, "Segoe UI", sans-serif';
+  ctx.clearRect(0, 0, W, H);
+  // background
+  ctx.fillStyle = "#FFF6E6"; ctx.fillRect(0, 0, W, H);
+  let seed = res.time % 9973; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const dots = ["#F6B93B", "#8CC63F", "#D7263D", "#F39237"];
+  for (let i = 0; i < 46; i++) { ctx.globalAlpha = .35; ctx.fillStyle = dots[i % 4]; ctx.beginPath(); ctx.arc(rnd() * W, rnd() * H, 6 + rnd() * 10, 0, Math.PI * 2); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  // card
+  rr(ctx, 60, 60, W - 120, H - 120, 56); ctx.fillStyle = "#FFFDF8"; ctx.fill();
+  ctx.lineWidth = 10; ctx.strokeStyle = "#D7263D"; ctx.stroke();
+  // header band
+  ctx.save(); rr(ctx, 60, 60, W - 120, H - 120, 56); ctx.clip();
+  ctx.fillStyle = "#D7263D"; ctx.fillRect(60, 60, W - 120, 210);
+  ctx.fillStyle = "#3B8B3F"; ctx.fillRect(60, 270, W - 120, 16);
+  ctx.restore();
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "#fff"; ctx.font = `800 96px ${D}`; ctx.fillText("TOMATO BUDDY", W / 2, 180);
+  ctx.font = `700 36px ${B}`; ctx.fillStyle = "#FFE9B8"; ctx.fillText("Smart Harvest · Tomato Detective", W / 2, 235);
+  // buddy
+  drawBuddy(ctx, W / 2, 545, 190, res.rank.level);
+  // name
+  ctx.fillStyle = "#3A2A22"; fitFont(ctx, G.name, 800, D, 104, W - 240); ctx.fillText(G.name, W / 2, 880);
+  // rank pill
+  ctx.font = `800 52px ${D}`; const rw = ctx.measureText(res.rank.title).width + 80;
+  rr(ctx, (W - rw) / 2, 905, rw, 78, 39); ctx.fillStyle = "#F6B93B"; ctx.fill();
+  ctx.fillStyle = "#3A2A22"; ctx.fillText(res.rank.title, W / 2, 962);
+  // stats
+  const stats = [["SCORE", String(res.score)], ["ACCURACY", Math.round(res.acc * 100) + "%"], ["HARVESTED", `${res.correct}/${res.ripeShown}`]];
+  const colW = (W - 200) / 3;
+  stats.forEach(([k, v], i) => {
+    const x = 100 + colW * i;
+    rr(ctx, x + 10, 1015, colW - 20, 150, 28); ctx.fillStyle = i === 0 ? "#FFF0EF" : "#F3F9EC"; ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = i === 0 ? "#F2B2B9" : "#CFE6B8"; ctx.stroke();
+    ctx.fillStyle = "#7A6455"; ctx.font = `800 26px ${B}`; ctx.fillText(k, x + colW / 2, 1062);
+    ctx.fillStyle = i === 0 ? "#A61B2E" : "#2A6A2E"; fitFont(ctx, v, 800, D, 72, colW - 50); ctx.fillText(v, x + colW / 2, 1140);
+  });
+  // footer
+  ctx.fillStyle = "#3B8B3F"; ctx.font = `800 34px ${D}`; ctx.fillText(EVENT_NAME + " · Brunei Darussalam", W / 2, 1222);
+  ctx.fillStyle = "#7A6455"; ctx.font = `600 26px ${B}`;
+  ctx.fillText(res.date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) + " · UNISSA Smart Harvest", W / 2, 1262);
+
+  const url = c.toDataURL("image/png");
+  $("cardImg").src = url;
+  $("cardImg").alt = `Tomato Buddy card for ${G.name}: ${res.rank.title}, score ${res.score}, accuracy ${Math.round(res.acc * 100)} percent.`;
+}
+
+/* ---- download: Claude viewer capability, else normal browser download ---- */
+let downloadsCap = null;
+try {
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("downloads").then(d => { downloadsCap = d; }).catch(() => {});
+  }
+} catch (e) {}
+
+function slug(s) { return (s.normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").toLowerCase()) || "player"; }
+
+async function downloadCard() {
+  if (!G.lastResult) return;
+  const c = $("cardCanvas");
+  const blob = await new Promise(r => c.toBlob(r, "image/png"));
+  if (!blob) { toast("Could not create the image. Press and hold the card to save it."); return; }
+  const filename = `tomato-buddy-${slug(G.name)}.png`;
+  if (downloadsCap) {
+    try {
+      const r = await downloadsCap.save({ filename, data: blob });
+      toast(r && r.status === "saved" ? "Card saved!" : "Card sent.");
+    } catch (e) {
+      if (e && e.code === "declined") toast("Download cancelled.");
+      else if (e && e.code === "rate_limited") toast("One moment, then try again.");
+      else toast("Download isn't available here. Press and hold the card to save it.");
+    }
+    return;
+  }
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast("Card downloaded!");
+  } catch (e) { toast("Press and hold the card to save it."); }
+}
+
+/* =========================================================
+   WIRING
+   ========================================================= */
+$("startForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = validateNickname($("nickname").value);
+  const err = $("nickError"), input = $("nickname");
+  if (!v.ok) {
+    err.textContent = v.error; err.hidden = false; input.setAttribute("aria-invalid", "true"); input.focus(); return;
+  }
+  err.hidden = true; input.removeAttribute("aria-invalid"); input.value = v.value;
+  startGame(v.value);
+});
+$("nickname").addEventListener("input", () => {
+  if (!$("nickError").hidden) { $("nickError").hidden = true; $("nickname").removeAttribute("aria-invalid"); }
+});
+$("quitBtn").addEventListener("click", quitGame);
+$("againBtn").addEventListener("click", () => startGame(G.name));
+$("newPlayerBtn").addEventListener("click", () => { $("nickname").value = ""; quitGame(); });
+$("downloadBtn").addEventListener("click", downloadCard);
+$("clearBtn").addEventListener("click", () => { $("clearConfirm").hidden = false; $("clearNo").focus(); });
+$("clearNo").addEventListener("click", () => { $("clearConfirm").hidden = true; });
+$("clearYes").addEventListener("click", () => {
+  saveStore({ scores: [] }); $("clearConfirm").hidden = true;
+  renderScores($("hsResults")); renderScores($("hsWelcome")); toast("High scores cleared.");
+});
+
+/* survey link */
+(function () {
+  const a = $("surveyLink"), note = $("surveyNote");
+  const isSet = /^https?:\/\//i.test(SURVEY_URL);
+  if (isSet) { a.href = SURVEY_URL; note.textContent = "Opens in a new tab. It takes about 2 minutes."; }
+  else {
+    a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".55"; a.style.cursor = "not-allowed";
+    note.textContent = "Survey link coming soon.";
+  }
+})();
+
+/* boot */
+$("heroArt").innerHTML = tomatoSVG("ripe", { face: true });
+renderLegend(); renderMute(); renderHelper(); renderScores($("hsWelcome"));
+</script>
