@@ -1094,7 +1094,15 @@ $("clearYes").addEventListener("click", () => {
 (function () {
   const a = $("surveyLink"), note = $("surveyNote");
   const isSet = /^https?:\/\//i.test(SURVEY_URL);
-  if (isSet) { a.href = SURVEY_URL; note.textContent = "Opens in a new tab. 10 quick questions, about 3 minutes."; }
+  let fromSurvey = false;
+  try { fromSurvey = new URLSearchParams(location.search).get("from") === "survey"; } catch (e) {}
+  if (fromSurvey) {
+    a.removeAttribute("href"); a.removeAttribute("target");
+    a.textContent = "Survey done. Thank you!";
+    a.setAttribute("aria-disabled", "true"); a.style.cursor = "default";
+    a.classList.remove("btn-primary"); a.classList.add("btn-green");
+    note.textContent = "Your survey answers were saved before you started playing.";
+  } else if (isSet) { a.href = SURVEY_URL; note.textContent = "Opens in a new tab. 10 quick questions, about 3 minutes."; }
   else {
     a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".55"; a.style.cursor = "not-allowed";
     note.textContent = "Survey link coming soon.";
