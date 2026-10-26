@@ -446,7 +446,7 @@ h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
 /* =========================================================
    SETTINGS — edit these before the event
    ========================================================= */
-const SURVEY_URL = "PASTE-YOUR-SURVEY-LINK-HERE"; // e.g. https://your-username.github.io/smart-harvest-survey/
+const SURVEY_URL = "https://qawiqudds18-coder.github.io/smart-harvest-survey/";
 const EVENT_NAME = "Technopreneurship 2026";
 const STORE_KEY  = "smartHarvest.tomatoDetective.v1";
 
@@ -1094,7 +1094,7 @@ $("clearYes").addEventListener("click", () => {
 (function () {
   const a = $("surveyLink"), note = $("surveyNote");
   const isSet = /^https?:\/\//i.test(SURVEY_URL);
-  if (isSet) { a.href = SURVEY_URL; note.textContent = "Opens in a new tab. It takes about 2 minutes."; }
+  if (isSet) { a.href = SURVEY_URL; note.textContent = "Opens in a new tab. 10 quick questions, about 3 minutes."; }
   else {
     a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".55"; a.style.cursor = "not-allowed";
     note.textContent = "Survey link coming soon.";
